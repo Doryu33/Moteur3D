@@ -11,6 +11,19 @@ struct Vertex {
   double z;
 };
 
+/// @brief Structure pour représenter un vecteur 3D
+struct Vecteur3i {
+  int x;
+  int y;
+  int z;
+};
+
+struct Vecteur3f{
+  double x;
+  double y;
+  double z;
+};
+
 class Modele {
  public:
   // Constructeur qui prend en argument le nom du fichier à lire
