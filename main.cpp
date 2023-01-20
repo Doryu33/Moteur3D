@@ -16,6 +16,7 @@ int height = 1000;
 // Modele contenant les données du fichier obj
 Modele *modele = NULL;
 
+
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
     bool steep = false;
@@ -59,8 +60,17 @@ int area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
     return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0;
 }
 
-bool is_inside_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int px, int py)
+
+bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int py, Vertex &bary)
 {
+    int x1 = point1.x;
+    int y1 = point1.y;
+
+    int x2 = point2.x;
+    int y2 = point2.y;
+
+    int x3 = point3.x;
+    int y3 = point3.y;
     /* Calculate area of triangle ABC */
     int A = area_of_triangle(x1, y1, x2, y2, x3, y3);
     /* Calculate area of triangle PBC */
@@ -69,15 +79,20 @@ bool is_inside_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int px, 
     int A2 = area_of_triangle(x2, y2, x3, y3, px, py);
     /* Calculate area of triangle PAB */
     int A3 = area_of_triangle(x3, y3, x1, y1, px, py);
-    
-    double alpha = (double) A2 / (double) A;
-    double beta = (double) A3 / (double) A;
-    double gamma = (double) A1 / (double) A;
 
-    return alpha> -0.01 && beta > -0.01 && gamma > -0.01;
+    double alpha = (double)A2 / (double)A;
+    double beta = (double)A3 / (double)A;
+    double gamma = (double)A1 / (double)A;
+
+    bary.x = alpha;
+    bary.y = beta;
+    bary.z = gamma;
+    double baryo_z = alpha * point2.z + beta * point3.z + gamma * point1.z;
+
+    return alpha > -0.01 && beta > -0.01 && gamma > -0.01;
 }
 
-void triangle(std::vector<Vertex> points, TGAImage &image, TGAColor color)
+void triangle(std::vector<Vertex> points, float *zbuffer, TGAImage &image, TGAColor color)
 {
     int bboxminx = image.get_width() - 1;
     int bboxminy = image.get_height() - 1;
@@ -88,19 +103,41 @@ void triangle(std::vector<Vertex> points, TGAImage &image, TGAColor color)
     // Calcul de la boite autour du triangle
     for (int i = 0; i < 3; i++)
     {
-        bboxminx = std::max(std::min(bboxminx, (int) points[i].x), 0);
-        bboxminy = std::max(std::min(bboxminy, (int) points[i].y), 0);
-        bboxmaxx = std::min(std::max(bboxmaxx, (int) points[i].x), clampx);
-        bboxmaxy = std::min(std::max(bboxmaxy, (int) points[i].y), clampy);
+        bboxminx = std::max(std::min(bboxminx, (int)points[i].x), 0);
+        bboxminy = std::max(std::min(bboxminy, (int)points[i].y), 0);
+        bboxmaxx = std::min(std::max(bboxmaxx, (int)points[i].x), clampx);
+        bboxmaxy = std::min(std::max(bboxmaxy, (int)points[i].y), clampy);
     }
 
     Vertex p;
+    Vertex barycentrique;
     for (p.x = bboxminx; p.x < bboxmaxx; p.x++)
     {
         for (p.y = bboxminy; p.y < bboxmaxy; p.y++)
         {
-            if(is_inside_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, p.x, p.y)){
-                image.set(p.x,p.y,color);
+            if (is_inside_triangle(points[0], points[1], points[2], p.x, p.y, barycentrique))
+            {
+                p.z = 0;
+                for (int i = 0; i < 3; i++) {
+                    switch (i)
+                    {
+                    case 0:
+                        p.z += points[i].z * barycentrique.x;
+                        break;
+                    case 1:
+                        p.z += points[i].z * barycentrique.y;
+                        break;
+                    case 2:
+                        p.z += points[i].z * barycentrique.z;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                if (zbuffer[int(p.x+p.y*width)]<p.z) {
+                    zbuffer[int(p.x+p.y*width)] = p.z;
+                    image.set(p.x, p.y, color);
+                }                
             }
         }
     }
@@ -138,7 +175,8 @@ void wireframe(Modele *modele, TGAImage &image, TGAColor color)
     }
 }
 
-void flat_shading_render(Modele *modele, TGAImage &image){
+void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image)
+{
     // Constante utile pour le placement des points
     int w = width / 2;
     int h = height / 2;
@@ -148,11 +186,9 @@ void flat_shading_render(Modele *modele, TGAImage &image){
     light_direction.y = 0;
     light_direction.z = -1;
 
-
     std::vector<std::vector<int> > faces = modele->GetFaces();
     std::vector<Vertex> vertex = modele->GetVertex();
 
-    Vecteur3f worldcoord[3];
     for (int i = 0; i < modele->nbfaces(); i++)
     {
         std::vector<int> face = faces[i];
@@ -163,14 +199,14 @@ void flat_shading_render(Modele *modele, TGAImage &image){
 
         Vertex v2 = vertex[face[2] - 1];
 
-        Vecteur3f v01 = {v1.x-v0.x, v1.y-v0.y, v1.z-v0.z};
-        Vecteur3f v02 = {v2.x-v0.x, v2.y-v0.y, v2.z-v0.z};
-        Vecteur3f n = {v01.y*v02.z - v01.z*v02.y, v01.z*v02.x - v01.x*v02.z, v01.x*v02.y - v01.y*v02.x};
-        double len = std::sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
+        Vecteur3f v01 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
+        Vecteur3f v02 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
+        Vecteur3f n = {v01.y * v02.z - v01.z * v02.y, v01.z * v02.x - v01.x * v02.z, v01.x * v02.y - v01.y * v02.x};
+        double len = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
         n.x /= len;
         n.y /= len;
         n.z /= len;
-        double intensity = -(light_direction.x*n.x + light_direction.y*n.y + light_direction.z*n.z);
+        double intensity = -(light_direction.x * n.x + light_direction.y * n.y + light_direction.z * n.z);
 
         v0.x = (v0.x * w) + w;
         v0.y = (v0.y * h) + h;
@@ -185,11 +221,10 @@ void flat_shading_render(Modele *modele, TGAImage &image){
         points.push_back(v0);
         points.push_back(v1);
         points.push_back(v2);
-        if (intensity>0)
-        triangle(points,image,TGAColor(255.*intensity, 255.*intensity, 255.*intensity, 255));
+        if (intensity > 0)
+            triangle(points, zbuffer, image, TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255));
     }
 }
-
 
 int main(int argc, char **argv)
 {
@@ -206,8 +241,11 @@ int main(int argc, char **argv)
         modele = new Modele("obj/african_head.obj");
     }
 
-    //wireframe(modele, image, white);
-    flat_shading_render(modele,image);
+    float *zbuffer = new float[width*height];
+    for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
+
+    // wireframe(modele, image, white);
+    flat_shading_render(modele, zbuffer, image);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
     return 0;
