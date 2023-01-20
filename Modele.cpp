@@ -61,19 +61,27 @@ void Modele::LireFichier()
     {
       // Extrait les 3 premiers nombres de la ligne et les stocke dans le tableau
       std::vector<int> nombres;
+      std::vector<int> nombres2;
       // On commence à l'indice 2 pour ignorer le "f "
       size_t debut = 2; 
 
       // On cherche le "/" pour délimiter.
       size_t fin = ligne.find('/', debut);
-
+      size_t debut2 = fin+1;
+      size_t fin2 = ligne.find('/', debut2);
       //On boucle tant que la premiere liste n'est pas remplie
       while (nombres.size() < 3 && fin != std::string::npos)
       {
         nombres.push_back(std::stoi(ligne.substr(debut, fin - debut)));
+        nombres2.push_back(std::stoi(ligne.substr(debut2, fin2 - debut2)));
         //Une fois le premier nombre trouvé on passe au groupe suivant (séparé par un espace)
         fin = ligne.find(' ', debut);
         debut = fin + 1;
+
+        fin2 = ligne.find('/', debut);
+        debut2 = fin2 + 1;
+
+
       }
       // Ajoute le dernier nombre s'il y en a encore un (2nd cas d'arret du while())
       if (nombres.size() < 3)
@@ -81,6 +89,7 @@ void Modele::LireFichier()
         nombres.push_back(std::stoi(ligne.substr(debut)));
       }
       faces_.push_back(nombres);
+      facesCoord_.push_back(nombres2);
     }
     else if (ligne[0] == 'v' && ligne[1] == 't'){
       // On crée un objet vertex pour stocker les 3 premiers nombres dedans

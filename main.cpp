@@ -87,12 +87,11 @@ bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int
     bary.x = alpha;
     bary.y = beta;
     bary.z = gamma;
-    //double baryo_z = alpha * point2.z + beta * point3.z + gamma * point1.z;
 
     return alpha > -0.01 && beta > -0.01 && gamma > -0.01;
 }
 
-void triangle(std::vector<Vertex> points, float *zbuffer, TGAImage &image, TGAColor color)
+void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextures, float *zbuffer, TGAImage &image,TGAImage &texture, TGAColor color, double intensity)
 {
     int bboxminx = image.get_width() - 1;
     int bboxminy = image.get_height() - 1;
@@ -111,12 +110,25 @@ void triangle(std::vector<Vertex> points, float *zbuffer, TGAImage &image, TGACo
 
     Vertex p;
     Vertex barycentrique;
+    //Nouvelle couleur
+    TGAColor colorTexture;
+    
     for (p.x = bboxminx; p.x < bboxmaxx; p.x++)
     {
         for (p.y = bboxminy; p.y < bboxmaxy; p.y++)
         {
             if (is_inside_triangle(points[0], points[1], points[2], p.x, p.y, barycentrique))
             {
+                //Interpoler les couleurs des sommets points 0/1/2
+                //Aller get dans texture le couleur du point p(x,y)
+
+                double baryx =  barycentrique.x * pointsTextures[0].x + barycentrique.y * pointsTextures[1].x + barycentrique.z * pointsTextures[2].x;
+                double baryy =  barycentrique.x * pointsTextures[0].y + barycentrique.y * pointsTextures[1].y + barycentrique.z * pointsTextures[2].y;
+                
+                baryx = baryx * texture.get_width();
+                baryy = baryy * texture.get_height();
+                
+                colorTexture = texture.get(baryx, baryy);
                 p.z = 0;
                 for (int i = 0; i < 3; i++) {
                     switch (i)
@@ -136,7 +148,7 @@ void triangle(std::vector<Vertex> points, float *zbuffer, TGAImage &image, TGACo
                 }
                 if (zbuffer[int(p.x+p.y*width)]<p.z) {
                     zbuffer[int(p.x+p.y*width)] = p.z;
-                    image.set(p.x, p.y, color);
+                    image.set(p.x, p.y, TGAColor(colorTexture.r * intensity, colorTexture.g * intensity, colorTexture.b  * intensity, 255));
                 }                
             }
         }
@@ -175,7 +187,7 @@ void wireframe(Modele *modele, TGAImage &image, TGAColor color)
     }
 }
 
-void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image)
+void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImage &texture)
 {
     // Constante utile pour le placement des points
     int w = width / 2;
@@ -187,17 +199,24 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image)
     light_direction.z = -1;
 
     std::vector<std::vector<int> > faces = modele->GetFaces();
+    std::vector<std::vector<int> > faces2 = modele->GetFacesCoord();
     std::vector<Vertex> vertex = modele->GetVertex();
+    std::vector<VertexTexture> vertexT = modele->GetVertexTexture();
+
 
     for (int i = 0; i < modele->nbfaces(); i++)
     {
         std::vector<int> face = faces[i];
+        std::vector<int> faceCoord = faces2[i];
 
         Vertex v0 = vertex[face[0] - 1];
+        VertexTexture vt0 = vertexT[faceCoord[0] - 1];
 
         Vertex v1 = vertex[face[1] - 1];
+        VertexTexture vt1 = vertexT[faceCoord[1] - 1];
 
         Vertex v2 = vertex[face[2] - 1];
+        VertexTexture vt2 = vertexT[faceCoord[2] - 1];
 
         Vecteur3f v01 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
         Vecteur3f v02 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
@@ -221,8 +240,12 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image)
         points.push_back(v0);
         points.push_back(v1);
         points.push_back(v2);
+        std::vector<VertexTexture> pointsTexture;
+        pointsTexture.push_back(vt0);
+        pointsTexture.push_back(vt1);
+        pointsTexture.push_back(vt2);
         if (intensity > 0)
-            triangle(points, zbuffer, image, TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255));
+            triangle(points, pointsTexture,zbuffer, image, texture,TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255), intensity);
     }
 }
 
@@ -230,6 +253,9 @@ int main(int argc, char **argv)
 {
     // Création de l'image.
     TGAImage image(width, height, TGAImage::RGB);
+    TGAImage texture = TGAImage();
+    texture.read_tga_file("obj/african_head_diffuse.tga");
+    texture.flip_vertically();
     // On vérifie le nombre d'argument: si un argument est précisé, on s'en sert.
     // Sinon par défaut on ouvre le fichier "obj/african_head.obj"
     if (2 == argc)
@@ -245,14 +271,11 @@ int main(int argc, char **argv)
     float *zbuffer = new float[width*height];
     // Init a -l'infinie.
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
-
-    //std::cout << "f " << modele->GetFaces()[0][0] << " " << modele->GetFaces()[0][1] << " " << modele->GetFaces()[0][2] << "\n";
-    //std::cout << "f2 " << modele->GetFacesCoord()[0][0] << " " << modele->GetFacesCoord()[0][1] << " " << modele->GetFacesCoord()[0][2]<< "\n";
-
     // wireframe(modele, image, white);
-    flat_shading_render(modele, zbuffer, image);
+    flat_shading_render(modele, zbuffer, image, texture);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
+
 
     delete modele;
     return 0;
