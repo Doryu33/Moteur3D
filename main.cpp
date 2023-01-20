@@ -87,7 +87,7 @@ bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int
     bary.x = alpha;
     bary.y = beta;
     bary.z = gamma;
-    double baryo_z = alpha * point2.z + beta * point3.z + gamma * point1.z;
+    //double baryo_z = alpha * point2.z + beta * point3.z + gamma * point1.z;
 
     return alpha > -0.01 && beta > -0.01 && gamma > -0.01;
 }
@@ -241,12 +241,19 @@ int main(int argc, char **argv)
         modele = new Modele("obj/african_head.obj");
     }
 
+    // Z buffer
     float *zbuffer = new float[width*height];
+    // Init a -l'infinie.
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
+
+    //std::cout << "f " << modele->GetFaces()[0][0] << " " << modele->GetFaces()[0][1] << " " << modele->GetFaces()[0][2] << "\n";
+    //std::cout << "f2 " << modele->GetFacesCoord()[0][0] << " " << modele->GetFacesCoord()[0][1] << " " << modele->GetFacesCoord()[0][2]<< "\n";
 
     // wireframe(modele, image, white);
     flat_shading_render(modele, zbuffer, image);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
+
+    delete modele;
     return 0;
 }

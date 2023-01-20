@@ -11,6 +11,13 @@ struct Vertex {
   double z;
 };
 
+/// @brief Structure pour représenter un vertex de texture
+struct VertexTexture {
+  double x;
+  double y;
+  double z;
+};
+
 /// @brief Structure pour représenter un vecteur 3D
 struct Vecteur3i {
   int x;
@@ -34,14 +41,20 @@ class Modele {
 
   // Méthode pour accéder aux données stockées
   const std::vector<Vertex>& GetVertex() const;
+  const std::vector<VertexTexture>& GetVertexTexture() const;
   const std::vector<std::vector<int> >& GetFaces() const;
+  const std::vector<std::vector<int> >& GetFacesCoord() const;
   int nbvertex();
+  int nbvertexText();
   int nbfaces();
+  int nbfacesCoord();
 
  private:
   std::string nom_fichier_;
   std::vector<Vertex> vertex_;
+  std::vector<VertexTexture> vertexT_;
   std::vector<std::vector<int> > faces_;
+  std::vector<std::vector<int> > facesCoord_;
 };
 
 

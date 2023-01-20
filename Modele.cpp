@@ -82,6 +82,33 @@ void Modele::LireFichier()
       }
       faces_.push_back(nombres);
     }
+    else if (ligne[0] == 'v' && ligne[1] == 't'){
+      // On crée un objet vertex pour stocker les 3 premiers nombres dedans
+      VertexTexture vertexTexture;
+
+      // On commence à l'indice 3 pour ignorer le "vt "
+      size_t debut = 4; 
+      // On cherche l'espace pour délimiter la fin.
+      size_t fin = ligne.find(' ', debut);
+
+      // On attribue a vertex.x le premier nombre extrait de la ligne
+      vertexTexture.x = std::stod(ligne.substr(debut, fin - debut));
+
+      //On decalle le début de un char.
+      debut = fin + 1;
+      // On cherche l'espace pour délimiter la fin.
+      fin = ligne.find(' ', debut);
+
+      // On attribue a vertex.y le second nombre extrait de la ligne
+      vertexTexture.y = std::stod(ligne.substr(debut, fin - debut));
+
+      //On decalle le debut de un char.
+      debut = fin + 1;
+
+      //On attribue a vertex.z le dernier nombre
+      vertexTexture.z = std::stod(ligne.substr(debut));
+      vertexT_.push_back(vertexTexture);
+    }
   }
   // On ferme le fichier
   fichier.close();
@@ -100,8 +127,18 @@ int Modele::nbfaces(){
   return (int)faces_.size();
 }
 
+int Modele::nbvertexText(){
+  return (int)vertexT_.size();
+}
+
+int Modele::nbfacesCoord(){
+  return (int)facesCoord_.size();
+}
+
 // Getter
 const std::vector<Vertex> &Modele::GetVertex() const { return vertex_; }
+const std::vector<VertexTexture> &Modele::GetVertexTexture() const { return vertexT_; }
 
 // Getter
 const std::vector<std::vector<int> > &Modele::GetFaces() const { return faces_; }
+const std::vector<std::vector<int> > &Modele::GetFacesCoord() const { return facesCoord_; }
