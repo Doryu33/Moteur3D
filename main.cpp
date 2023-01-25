@@ -119,9 +119,6 @@ void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextu
         {
             if (is_inside_triangle(points[0], points[1], points[2], p.x, p.y, barycentrique))
             {
-                //Interpoler les couleurs des sommets points 0/1/2
-                //Aller get dans texture le couleur du point p(x,y)
-
                 double baryx =  barycentrique.x * pointsTextures[0].x + barycentrique.y * pointsTextures[1].x + barycentrique.z * pointsTextures[2].x;
                 double baryy =  barycentrique.x * pointsTextures[0].y + barycentrique.y * pointsTextures[1].y + barycentrique.z * pointsTextures[2].y;
                 
@@ -251,22 +248,33 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImag
 
 int main(int argc, char **argv)
 {
-    // Création de l'image.
-    TGAImage image(width, height, TGAImage::RGB);
-    TGAImage texture = TGAImage();
-    texture.read_tga_file("obj/african_head_diffuse.tga");
-    texture.flip_vertically();
+    
+    int fin;
+    std::string fileName;
+    std::string fileTextureName;
     // On vérifie le nombre d'argument: si un argument est précisé, on s'en sert.
     // Sinon par défaut on ouvre le fichier "obj/african_head.obj"
     if (2 == argc)
     {
+        fileName = argv[1];
+        fin = fileName.find(".");
+        fileTextureName = fileName.substr(0,fin) + "_diffuse.tga";
         modele = new Modele(argv[1]);
     }
     else
     {
+        std::cout << "Aucun fichier spécifié en argument. Utilisation du fichier par défaut (african_head).";
+        fileName = "obj/african_head.obj";
+        fileTextureName = "obj/african_head_diffuse.tga";
         modele = new Modele("obj/african_head.obj");
     }
 
+    // Création de l'image.
+    TGAImage image(width, height, TGAImage::RGB);
+    TGAImage texture = TGAImage();
+    texture.read_tga_file(fileTextureName.c_str());
+    texture.flip_vertically();
+    modele = new Modele(fileName);
     // Z buffer
     float *zbuffer = new float[width*height];
     // Init a -l'infinie.
