@@ -4,18 +4,20 @@
 #include "modele.h"
 #include <iostream>
 #include <algorithm>
+#include "matrix.h"
 
 // Constantes de couleur
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
 const TGAColor blue = TGAColor(0, 0, 255, 255);
+// Constantes
+const double distCamera = 1.0;
 // Taille de la fenètre
 int width = 1000;
 int height = 1000;
 // Modele contenant les données du fichier obj
 Modele *modele = NULL;
-
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
@@ -144,7 +146,6 @@ void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextu
                         break;
                     }
                 }
-                intensity = 1;
                 if (zbuffer[int(p.x+p.y*width)]<p.z) {
                     zbuffer[int(p.x+p.y*width)] = p.z;
                     image.set(p.x, p.y, TGAColor(colorTexture.r * intensity, colorTexture.g * intensity, colorTexture.b  * intensity, 255));
@@ -282,6 +283,7 @@ int main(int argc, char **argv)
     // Init a -l'infinie.
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
     // wireframe(modele, image, white);
+    modele->project(distCamera);
     flat_shading_render(modele, zbuffer, image, texture);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "matrix.h"
 
 /// @brief Structure pour représenter un vertex
 struct Vertex {
@@ -48,6 +49,8 @@ class Modele {
   int nbvertexText();
   int nbfaces();
   int nbfacesCoord();
+  void project(double c);
+
 
  private:
   std::string nom_fichier_;

@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "modele.h"
+#include "matrix.h"
 
 // Constructeur qui prend en argument le nom du fichier à lire
 Modele::Modele(const std::string &nom_fichier) : nom_fichier_(nom_fichier) {
@@ -142,6 +143,28 @@ int Modele::nbvertexText(){
 
 int Modele::nbfacesCoord(){
   return (int)facesCoord_.size();
+}
+
+void Modele::project(double c){
+    Matrix m;
+    Matrix identify;
+    identify = m.identity(4);
+    identify[3][2] = (-1/c);
+
+    for (size_t i = 0; i < nbvertex(); i++)
+    {
+        m = Matrix(4,1);
+        m[0][0] = vertex_[i].x;
+        m[1][0] = vertex_[i].y;
+        m[2][0] = vertex_[i].z;
+        m[3][0] = 1.0;
+
+        m = identify * m;
+
+        vertex_[i].x = m[0][0] / m[3][0];
+        vertex_[i].y = m[1][0] / m[3][0];
+        vertex_[i].z = m[2][0] / m[3][0];
+    }
 }
 
 // Getter
