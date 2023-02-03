@@ -55,9 +55,9 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
     }
 }
 
-int area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
+double area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
 {
-    return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0;
+    return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2))/2.0;
 }
 
 
@@ -72,13 +72,13 @@ bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int
     int x3 = point3.x;
     int y3 = point3.y;
     /* Calculate area of triangle ABC */
-    int A = area_of_triangle(x1, y1, x2, y2, x3, y3);
+    double A = area_of_triangle(x1, y1, x2, y2, x3, y3);
     /* Calculate area of triangle PBC */
-    int A1 = area_of_triangle(x1, y1, x2, y2, px, py);
+    double A1 = area_of_triangle(x1, y1, x2, y2, px, py);
     /* Calculate area of triangle PAC */
-    int A2 = area_of_triangle(x2, y2, x3, y3, px, py);
+    double A2 = area_of_triangle(x2, y2, x3, y3, px, py);
     /* Calculate area of triangle PAB */
-    int A3 = area_of_triangle(x3, y3, x1, y1, px, py);
+    double A3 = area_of_triangle(x3, y3, x1, y1, px, py);
 
     double alpha = (double)A2 / (double)A;
     double beta = (double)A3 / (double)A;
