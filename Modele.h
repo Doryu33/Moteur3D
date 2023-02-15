@@ -12,6 +12,9 @@ struct Vertex {
   double z;
 };
 
+Vertex matToVect(Matrix m);
+
+
 /// @brief Structure pour représenter un vertex de texture
 struct VertexTexture {
   double x;
@@ -31,6 +34,10 @@ struct Vecteur3f{
   double y;
   double z;
 };
+
+//Vertex matToVect(Matrix m);
+Vecteur3f normalize(Vecteur3f vecteur);
+Vecteur3f crossProduct(Vecteur3f u, Vecteur3f v);
 
 class Modele {
  public:

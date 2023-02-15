@@ -12,12 +12,55 @@ const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
 const TGAColor blue = TGAColor(0, 0, 255, 255);
 // Constantes
-const double distCamera = 1.0;
+const double distCamera = 150;
+// Constantes vecteurs
+Vecteur3f eye;
+Vecteur3f center;
 // Taille de la fenètre
 int width = 1000;
 int height = 1000;
+int depth = 255;
 // Modele contenant les données du fichier obj
 Modele *modele = NULL;
+
+Matrix viewport(int x, int y, int w, int h) {
+    Matrix m = Matrix::identity(4);
+    m[0][3] = x+w/2.f;
+    m[1][3] = y+h/2.f;
+    m[2][3] = depth/2.f;
+
+    m[0][0] = w/2.f;
+    m[1][1] = h/2.f;
+    m[2][2] = depth/2.f;
+    return m;
+}
+
+Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up) {
+    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+    Vecteur3f z = normalize(temp);
+
+    Vecteur3f x = crossProduct(up, z);
+    x = normalize(x);
+    Vecteur3f y = crossProduct(z,x);
+    y = normalize(y);
+
+    Matrix res = Matrix::identity(4);
+    res[0][0] = x.x;
+    res[0][1] = x.y;
+    res[0][2] = x.z;
+    res[0][3] = -center.x;
+
+    res[1][0] = y.x;
+    res[1][1] = y.y;
+    res[1][2] = y.z;
+    res[1][3] = -center.y;
+
+    res[2][0] = z.x;
+    res[2][1] = z.y;
+    res[2][2] = z.z;
+    res[2][3] = -center.z;
+    return res;
+}
 
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
 {
@@ -127,7 +170,7 @@ void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextu
                 int textureX, textureY;
                 textureX = baryx * texture.get_width();
                 textureY = baryy * texture.get_height();
-                
+
                 colorTexture = texture.get(textureX, textureY);
                 p.z = 0;
                 for (int i = 0; i < 3; i++) {
@@ -197,6 +240,15 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImag
     light_direction.x = 0;
     light_direction.y = 0;
     light_direction.z = -1;
+    Vecteur3f up = {0.,1.,0.};
+    Matrix ModelView  = lookat(eye, center, up);
+    Matrix ViewPort   = viewport(width/8, height/8, width*3/4, height*3/4);
+
+    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+
+    Matrix Projection = Matrix::identity(4);
+    double n = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z);
+    Projection[3][2] = -1./n;
 
     std::vector<std::vector<int> > faces = modele->GetFaces();
     std::vector<std::vector<int> > faces2 = modele->GetFacesCoord();
@@ -227,31 +279,32 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImag
         n.z /= len;
         double intensity = -(light_direction.x * n.x + light_direction.y * n.y + light_direction.z * n.z);
 
-        v0.x = (v0.x * w) + w;
-        v0.y = (v0.y * h) + h;
-
-        v1.x = (v1.x * w) + w;
-        v1.y = (v1.y * h) + h;
-
-        v2.x = (v2.x * w) + w;
-        v2.y = (v2.y * h) + h;
-
-        std::vector<Vertex> points;
-        points.push_back(v0);
-        points.push_back(v1);
-        points.push_back(v2);
         std::vector<VertexTexture> pointsTexture;
         pointsTexture.push_back(vt0);
         pointsTexture.push_back(vt1);
         pointsTexture.push_back(vt2);
+        std::vector<Vertex> screen_coords;
+        
+        screen_coords.push_back(matToVect(ViewPort*Projection*ModelView*Matrix(&v0)));
+        screen_coords.push_back(matToVect(ViewPort*Projection*ModelView*Matrix(&v1)));
+        screen_coords.push_back(matToVect(ViewPort*Projection*ModelView*Matrix(&v2)));
+
+        std::vector<double> intensitys;
+        //intensitys.push_back()
+
         if (intensity > 0)
-            triangle(points, pointsTexture,zbuffer, image, texture,TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255), intensity);
+            triangle(screen_coords, pointsTexture,zbuffer, image, texture,TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255), intensity);
     }
 }
 
 int main(int argc, char **argv)
 {
-    
+    eye.x = 1.;
+    eye.y = 1.;
+    eye.z = 3.;
+    center.x = 0.;
+    center.y = 0.;
+    center.z = 0.;
     int fin;
     std::string fileName;
     std::string fileTextureName;
@@ -282,8 +335,10 @@ int main(int argc, char **argv)
     float *zbuffer = new float[width*height];
     // Init a -l'infinie.
     for (int i=width*height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
-    // wireframe(modele, image, white);
-    modele->project(distCamera);
+    //wireframe(modele, image, white);
+    
+    //modele->project(distCamera);
+    
     flat_shading_render(modele, zbuffer, image, texture);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");

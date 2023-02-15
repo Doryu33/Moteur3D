@@ -1,7 +1,15 @@
 #include "matrix.h"
+#include "modele.h"
 #include <iostream>
 
 Matrix::Matrix(int r, int c) : m(std::vector<std::vector<float> >(r, std::vector<float>(c, 0.f))), rows(r), cols(c) { }
+
+
+Matrix::Matrix(Vertex* v) : m(std::vector<std::vector<float> >(4, std::vector<float>(1, 1.f))), rows(4), cols(1) {
+    m[0][0] = v->x;
+    m[1][0] = v->y;
+    m[2][0] = v->z;
+}
 
 int Matrix::nrows() {
     return rows;

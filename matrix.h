@@ -4,12 +4,14 @@
 #include <vector>
 
 const int DEFAULT_ALLOC=4;
+struct Vertex;
 
 class Matrix {
     std::vector<std::vector<float> > m;
     int rows, cols;
 public:
     Matrix(int r=DEFAULT_ALLOC, int c=DEFAULT_ALLOC);
+    Matrix(Vertex * v);    
     inline int nrows();
     inline int ncols();
 
