@@ -132,8 +132,9 @@ bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int
     bary.x = alpha;
     bary.y = beta;
     bary.z = gamma;
+    double marge = -0.001;
 
-    return alpha > -0.01 && beta > -0.01 && gamma > -0.01;
+    return alpha > marge && beta > marge && gamma > marge;
 }
 
 void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextures, float *zbuffer, TGAImage &image,TGAImage &texture, TGAColor color, double intensity)
@@ -158,9 +159,9 @@ void triangle(std::vector<Vertex> points, std::vector<VertexTexture> pointsTextu
     //Nouvelle couleur
     TGAColor colorTexture;
     
-    for (p.x = bboxminx; p.x < bboxmaxx; p.x++)
+    for (p.x = bboxminx; p.x <= bboxmaxx; p.x++)
     {
-        for (p.y = bboxminy; p.y < bboxmaxy; p.y++)
+        for (p.y = bboxminy; p.y <= bboxmaxy; p.y++)
         {
             if (is_inside_triangle(points[0], points[1], points[2], p.x, p.y, barycentrique))
             {
