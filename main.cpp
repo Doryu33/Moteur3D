@@ -290,9 +290,6 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImag
         screen_coords.push_back(matToVect(ViewPort*Projection*ModelView*Matrix(&v1)));
         screen_coords.push_back(matToVect(ViewPort*Projection*ModelView*Matrix(&v2)));
 
-        std::vector<double> intensitys;
-        //intensitys.push_back()
-
         if (intensity > 0)
             triangle(screen_coords, pointsTexture,zbuffer, image, texture,TGAColor(255. * intensity, 255. * intensity, 255. * intensity, 255), intensity);
     }
