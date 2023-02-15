@@ -271,8 +271,8 @@ void flat_shading_render(Modele *modele,float *zbuffer, TGAImage &image, TGAImag
         Vertex v2 = vertex[face[2] - 1];
         VertexTexture vt2 = vertexT[faceCoord[2] - 1];
 
-        Vecteur3f v01 = {((v1.x * w)+w) - ((v0.x * w) + w), ((v1.y * h) + h) - ((v0.y * h) + h), v1.z - v0.z};
-        Vecteur3f v02 = {((v2.x * w)+w) - ((v0.x*w)+w), ((v2.y*h)+h) - ((v0.y*h)+h), v2.z - v0.z};
+        Vecteur3f v01 = {v1.x  - v0.x , v1.y - v0.y, v1.z - v0.z};
+        Vecteur3f v02 = {v2.x - v0.x, v2.y - v0.y, v2.z - v0.z};
         Vecteur3f n = {v01.y * v02.z - v01.z * v02.y, v01.z * v02.x - v01.x * v02.z, v01.x * v02.y - v01.y * v02.x};
         double len = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
         n.x /= len;
