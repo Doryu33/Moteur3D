@@ -184,7 +184,7 @@ void wireframe(Modele *modele, TGAImage &image, TGAColor color)
     int w = width / 2;
     int h = height / 2;
 
-    std::vector<std::vector<int>> faces = modele->GetFaces();
+    std::vector<std::vector<int> > faces = modele->GetFaces();
     std::vector<Vertex> vertex = modele->GetVertex();
 
     for (int i = 0; i < modele->nbfaces(); i++)
@@ -234,8 +234,8 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
 
     //################################
     //On recupere les informations du .obj via modele.
-    std::vector<std::vector<int>> faces = modele->GetFaces();
-    std::vector<std::vector<int>> faces2 = modele->GetFacesCoord();
+    std::vector<std::vector<int> > faces = modele->GetFaces();
+    std::vector<std::vector<int> > faces2 = modele->GetFacesCoord();
     std::vector<Vertex> vertex = modele->GetVertex();
     std::vector<Vertex> vertexT = modele->GetVertexTexture();
     //################################
