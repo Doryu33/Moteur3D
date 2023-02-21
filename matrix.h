@@ -22,11 +22,11 @@ public:
     Matrix operator*(const Matrix& a);
     Matrix transpose();
     Matrix inverse();
-
     friend std::ostream& operator<<(std::ostream& s, Matrix& m);
 };
 
 Matrix viewport(int x, int y, int w, int h, int depth);
 Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up);
+Matrix projection(Vecteur3f eye, Vecteur3f center);
 
 #endif //__MATRIX_H__

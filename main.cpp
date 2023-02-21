@@ -219,17 +219,10 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
     //################################
 
     //################################
-    //Definition des matrice ModelView et ViewPort
+    //Definition des matrice ModelView, ViewPort et Projection
     Matrix ModelView = lookat(eye, center, up);
     Matrix ViewPort = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4, depth);
-    //################################
-
-    //################################
-    //Definition matrice Projection
-    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
-    Matrix Projection = Matrix::identity(4);
-    double n = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z);
-    Projection[3][2] = -1. / n;
+    Matrix Projection = projection(eye,center);
     //################################
 
     //################################

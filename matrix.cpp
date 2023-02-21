@@ -80,6 +80,18 @@ Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up)
     return res;
 }
 
+/**
+ * @brief Permet de calculer la matrice "Projection"
+ * 
+ * @return Matrix  Projection
+ */
+Matrix projection(Vecteur3f eye, Vecteur3f center){
+    Matrix res = Matrix::identity(4);
+    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+    double n = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z);
+    res[3][2] = -1. / n;
+    return res;
+}
 
 std::vector<float>& Matrix::operator[](const int i) {
     assert(i>=0 && i<rows);
