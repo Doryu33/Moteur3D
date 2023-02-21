@@ -2,6 +2,8 @@
 #define __MATRIX_H__
 #include <cmath>
 #include <vector>
+#include <ostream>
+#include <cassert>
 
 const int DEFAULT_ALLOC=4;
 struct Vertex;
