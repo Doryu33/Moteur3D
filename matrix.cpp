@@ -29,6 +29,58 @@ Matrix Matrix::identity(int dimensions) {
     return E;
 }
 
+/**
+ * @brief Permet de calculer la matrice "ViewPort"
+ * 
+ * @return Matrix viewport
+ */
+Matrix viewport(int x, int y, int w, int h, int depth)
+{
+    Matrix m = Matrix::identity(4);
+    m[0][3] = x + w / 2.f;
+    m[1][3] = y + h / 2.f;
+    m[2][3] = depth / 2.f;
+
+    m[0][0] = w / 2.f;
+    m[1][1] = h / 2.f;
+    m[2][2] = depth / 2.f;
+    return m;
+}
+
+/**
+ * @brief Permet de calculer la matrice "ModeleView"
+ * 
+ * @return Matrix ModeleView
+ */
+Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up)
+{
+    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+    Vecteur3f z = normalize(temp);
+
+    Vecteur3f x = crossProduct(up, z);
+    x = normalize(x);
+    Vecteur3f y = crossProduct(z, x);
+    y = normalize(y);
+
+    Matrix res = Matrix::identity(4);
+    res[0][0] = x.x;
+    res[0][1] = x.y;
+    res[0][2] = x.z;
+    res[0][3] = -center.x;
+
+    res[1][0] = y.x;
+    res[1][1] = y.y;
+    res[1][2] = y.z;
+    res[1][3] = -center.y;
+
+    res[2][0] = z.x;
+    res[2][1] = z.y;
+    res[2][2] = z.z;
+    res[2][3] = -center.z;
+    return res;
+}
+
+
 std::vector<float>& Matrix::operator[](const int i) {
     assert(i>=0 && i<rows);
     return m[i];

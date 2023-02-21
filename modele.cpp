@@ -124,7 +124,7 @@ void Modele::LireFichier()
     }
     else if (ligne[0] == 'v' && ligne[1] == 't'){
       // On crée un objet vertex pour stocker les 3 premiers nombres dedans
-      VertexTexture vertexTexture;
+      Vertex vertexTexture;
 
       // On commence à l'indice 3 pour ignorer le "vt "
       size_t debut = 4; 
@@ -181,7 +181,7 @@ void Modele::project(double c){
     identify = m.identity(4);
     identify[3][2] = (-1/c);
 
-    for (size_t i = 0; i < nbvertex(); i++)
+    for (int i = 0; i < nbvertex(); i++)
     {
         m = Matrix(4,1);
         m[0][0] = vertex_[i].x;
@@ -199,7 +199,7 @@ void Modele::project(double c){
 
 // Getter
 const std::vector<Vertex> &Modele::GetVertex() const { return vertex_; }
-const std::vector<VertexTexture> &Modele::GetVertexTexture() const { return vertexT_; }
+const std::vector<Vertex> &Modele::GetVertexTexture() const { return vertexT_; }
 
 // Getter
 const std::vector<std::vector<int> > &Modele::GetFaces() const { return faces_; }

@@ -12,21 +12,11 @@ struct Vertex {
   double z;
 };
 
-Vertex matToVect(Matrix m);
-
-
 /// @brief Structure pour représenter un vertex de texture
 struct VertexTexture {
   double x;
   double y;
   double z;
-};
-
-/// @brief Structure pour représenter un vecteur 3D
-struct Vecteur3i {
-  int x;
-  int y;
-  int z;
 };
 
 struct Vecteur3f{
@@ -35,7 +25,7 @@ struct Vecteur3f{
   double z;
 };
 
-//Vertex matToVect(Matrix m);
+Vertex matToVect(Matrix m);
 Vecteur3f normalize(Vecteur3f vecteur);
 Vecteur3f crossProduct(Vecteur3f u, Vecteur3f v);
 
@@ -49,7 +39,7 @@ class Modele {
 
   // Méthode pour accéder aux données stockées
   const std::vector<Vertex>& GetVertex() const;
-  const std::vector<VertexTexture>& GetVertexTexture() const;
+  const std::vector<Vertex>& GetVertexTexture() const;
   const std::vector<std::vector<int> >& GetFaces() const;
   const std::vector<std::vector<int> >& GetFacesCoord() const;
   int nbvertex();
@@ -62,7 +52,7 @@ class Modele {
  private:
   std::string nom_fichier_;
   std::vector<Vertex> vertex_;
-  std::vector<VertexTexture> vertexT_;
+  std::vector<Vertex> vertexT_;
   std::vector<std::vector<int> > faces_;
   std::vector<std::vector<int> > facesCoord_;
 };
