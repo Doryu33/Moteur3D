@@ -4,37 +4,6 @@
 #include <iostream>
 #include "modele.h"
 
-Vertex matToVect(Matrix m){
-  Vertex res;
-  float z = m[3][0];
-  res.x = m[0][0]/z;
-  res.y = m[1][0]/z;
-  res.z = m[2][0]/z;
-  return res;
-}
-
-Vecteur3f normalize(Vecteur3f vecteur){
-    double n = sqrt(vecteur.x * vecteur.x + vecteur.y * vecteur.y + vecteur.z * vecteur.z);
-    Vecteur3f v;
-    v.x = vecteur.x;
-    v.y = vecteur.y;
-    v.z = vecteur.z;
-
-    v.x *= (1./n);
-    v.y *= (1./n);
-    v.z *= (1./n);
-
-    return v;
-};
-
-Vecteur3f crossProduct(Vecteur3f v, Vecteur3f u){
-  Vecteur3f res;
-  res.x = v.y * u.z - v.z * u.y;
-  res.y = v.z * u.x - v.x * u.z;
-  res.z = v.x * u.y - v.y * u.x;
-  return res;
-};
-
 // Constructeur qui prend en argument le nom du fichier à lire
 Modele::Modele(const std::string &nom_fichier) : nom_fichier_(nom_fichier) {
   LireFichier();

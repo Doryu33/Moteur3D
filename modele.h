@@ -1,33 +1,8 @@
 #ifndef __MODELE_H__
 #define __MODELE_H__
-
 #include <string>
 #include <vector>
-#include "matrix.h"
-
-/// @brief Structure pour représenter un vertex
-struct Vertex {
-  double x;
-  double y;
-  double z;
-};
-
-/// @brief Structure pour représenter un vertex de texture
-struct VertexTexture {
-  double x;
-  double y;
-  double z;
-};
-
-struct Vecteur3f{
-  double x;
-  double y;
-  double z;
-};
-
-Vertex matToVect(Matrix m);
-Vecteur3f normalize(Vecteur3f vecteur);
-Vecteur3f crossProduct(Vecteur3f u, Vecteur3f v);
+#include "geometry.h"
 
 class Modele {
  public:

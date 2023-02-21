@@ -4,7 +4,6 @@
 #include "modele.h"
 #include <iostream>
 #include <algorithm>
-#include "matrix.h"
 
 // Constantes de couleur
 const TGAColor white = TGAColor(255, 255, 255, 255);
