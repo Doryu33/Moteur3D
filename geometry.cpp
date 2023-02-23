@@ -117,11 +117,9 @@ Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up)
  * 
  * @return Matrix  Projection
  */
-Matrix projection(Vecteur3f eye, Vecteur3f center){
+Matrix projection(double coeff){
     Matrix res = Matrix::identity(4);
-    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
-    double n = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z);
-    res[3][2] = -1. / n;
+    res[3][2] = coeff;
     return res;
 }
 
@@ -202,4 +200,41 @@ std::ostream& operator<<(std::ostream& s, Matrix& m) {
         s << "\n";
     }
     return s;
+}
+
+/**
+ * @brief Calcul l'air d'un triangle
+ * 
+ */
+double area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
+{
+    return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0;
+}
+
+
+/**
+ * @brief Vérifie si le point P est dans un triangle
+ * 
+ */
+bool is_inside_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int px, int py, Vertex &bary)
+{
+    /* Calculate area of triangle ABC */
+    double A = area_of_triangle(x1, y1, x2, y2, x3, y3);
+    /* Calculate area of triangle PBC */
+    double A1 = area_of_triangle(x1, y1, x2, y2, px, py);
+    /* Calculate area of triangle PAC */
+    double A2 = area_of_triangle(x2, y2, x3, y3, px, py);
+    /* Calculate area of triangle PAB */
+    double A3 = area_of_triangle(x3, y3, x1, y1, px, py);
+
+    double alpha = (double)A2 / (double)A;
+    double beta = (double)A3 / (double)A;
+    double gamma = (double)A1 / (double)A;
+
+    bary.x = alpha;
+    bary.y = beta;
+    bary.z = gamma;
+    double marge = -0.001;
+
+    return alpha > marge && beta > marge && gamma > marge;
 }

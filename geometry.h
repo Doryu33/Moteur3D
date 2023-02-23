@@ -21,11 +21,25 @@ struct VertexTexture {
   double z;
 };
 
+struct Vecteur2f{
+  double x;
+  double y;
+};
+
 struct Vecteur3f{
   double x;
   double y;
   double z;
 };
+
+struct Vecteur4f
+{
+  double x;
+  double y;
+  double z;
+  double v;
+};
+
 
 class Matrix {
     std::vector<std::vector<float> > m;
@@ -45,11 +59,12 @@ public:
 
 Matrix viewport(int x, int y, int w, int h, int depth);
 Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up);
-Matrix projection(Vecteur3f eye, Vecteur3f center);
+Matrix projection(double coeff);
 
 Vertex matToVect(Matrix m);
 
 Vecteur3f normalize(Vecteur3f vecteur);
 Vecteur3f crossProduct(Vecteur3f u, Vecteur3f v);
-
+double area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3);
+bool is_inside_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int px, int py, Vertex &bary);
 #endif //__GEOMETRY_H__

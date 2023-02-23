@@ -4,21 +4,42 @@
 #include "modele.h"
 #include <iostream>
 #include <algorithm>
+#include "our_gl.h"
 
+//################################
 // Constantes de couleur
 const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 const TGAColor green = TGAColor(0, 255, 0, 255);
 const TGAColor blue = TGAColor(0, 0, 255, 255);
-// Constantes vecteurs
+//################################
+
+//################################
+//Constantes vecteurs
+Vecteur3f light_direction = {0., 0., -1.};
 Vecteur3f eye = {1., 1., 3.};
 Vecteur3f center = {0., 0., 0.};
-// Taille de la fenètre
+Vecteur3f up = {0., 1., 0.};
+//################################
+
+//################################
+//Constante Matrix
+Matrix ModelView;
+Matrix ViewPort;
+Matrix Projection;
+//################################
+
+//################################
+// Taille de la fenetre
 int width = 1000;
 int height = 1000;
 int depth = 255;
+//################################
+
+//################################
 // Modele contenant les données du fichier obj
 Modele *modele = NULL;
+//################################
 
 /**
  * @brief Permet de colorier des pixel sur une ligne définie par 2 points x et y.
@@ -62,49 +83,6 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
     }
 }
 
-/**
- * @brief Calcul l'air d'un triangle
- * 
- */
-double area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3)
-{
-    return (x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0;
-}
-
-/**
- * @brief Vérifie si le point P est dans un triangle
- * 
- */
-bool is_inside_triangle(Vertex point1, Vertex point2, Vertex point3, int px, int py, Vertex &bary)
-{
-    int x1 = point1.x;
-    int y1 = point1.y;
-
-    int x2 = point2.x;
-    int y2 = point2.y;
-
-    int x3 = point3.x;
-    int y3 = point3.y;
-    /* Calculate area of triangle ABC */
-    double A = area_of_triangle(x1, y1, x2, y2, x3, y3);
-    /* Calculate area of triangle PBC */
-    double A1 = area_of_triangle(x1, y1, x2, y2, px, py);
-    /* Calculate area of triangle PAC */
-    double A2 = area_of_triangle(x2, y2, x3, y3, px, py);
-    /* Calculate area of triangle PAB */
-    double A3 = area_of_triangle(x3, y3, x1, y1, px, py);
-
-    double alpha = (double)A2 / (double)A;
-    double beta = (double)A3 / (double)A;
-    double gamma = (double)A1 / (double)A;
-
-    bary.x = alpha;
-    bary.y = beta;
-    bary.z = gamma;
-    double marge = -0.001;
-
-    return alpha > marge && beta > marge && gamma > marge;
-}
 
 /**
  * @brief Permet de dessiner un triangle avec la couleur qui corresponds a la texture
@@ -143,7 +121,7 @@ void triangle(std::vector<Vertex> points, std::vector<Vertex> pointsTextures, fl
         for (p.y = bboxminy; p.y <= bboxmaxy; p.y++)
         {
             //Si le pixel est dans le triangle
-            if (is_inside_triangle(points[0], points[1], points[2], p.x, p.y, barycentrique))
+            if (is_inside_triangle(points[0].x, points[0].y, points[1].x, points[1].y, points[2].x, points[2].y, p.x, p.y, barycentrique))
             {
                 //Calcul coordonnées barycentrique
                 double baryx = barycentrique.x * pointsTextures[0].x + barycentrique.y * pointsTextures[1].x + barycentrique.z * pointsTextures[2].x;
@@ -211,17 +189,14 @@ void wireframe(Modele *modele, TGAImage &image, TGAColor color)
 
 void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
 {
-    //################################
-    //Constantes vecteurs
-    Vecteur3f light_direction = {0., 0., -1.};
-    Vecteur3f up = {0., 1., 0.};
-    //################################
 
     //################################
     //Definition des matrice ModelView, ViewPort et Projection
-    Matrix ModelView = lookat(eye, center, up);
-    Matrix ViewPort = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4, depth);
-    Matrix Projection = projection(eye,center);
+    ModelView = lookat(eye, center, up);
+    ViewPort = viewport(width / 8, height / 8, width * 3 / 4, height * 3 / 4, depth);
+    Vecteur3f temp = {eye.x - center.x, eye.y - center.y, eye.z - center.z};
+    double n = sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z);
+    Projection = projection(-1./n);
     //################################
 
     //################################
@@ -284,6 +259,8 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
     //################################
 
 }
+
+
 
 int main(int argc, char **argv)
 {
