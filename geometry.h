@@ -30,6 +30,20 @@ struct Vecteur3f{
   double x;
   double y;
   double z;
+
+  double& operator[](const int i){
+    int index = i%3;
+    switch (index)
+    {
+    case 0: return x;
+    case 1: return y;
+    default: return z;
+    }
+  }
+
+  double operator* (const Vecteur3f &v){
+    return x * v.x + y * v.y + z * v.z;
+  }
 };
 
 struct Vecteur4f
@@ -39,7 +53,6 @@ struct Vecteur4f
   double z;
   double v;
 };
-
 
 class Matrix {
     std::vector<std::vector<float> > m;
@@ -62,9 +75,11 @@ Matrix lookat(Vecteur3f eye, Vecteur3f center, Vecteur3f up);
 Matrix projection(double coeff);
 
 Vertex matToVect(Matrix m);
+Vecteur3f matToVect3f(Matrix m);
 
 Vecteur3f normalize(Vecteur3f vecteur);
 Vecteur3f crossProduct(Vecteur3f u, Vecteur3f v);
 double area_of_triangle(int x1, int y1, int x2, int y2, int x3, int y3);
 bool is_inside_triangle(int x1, int y1, int x2, int y2, int x3, int y3, int px, int py, Vertex &bary);
+
 #endif //__GEOMETRY_H__

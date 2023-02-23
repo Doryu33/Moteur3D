@@ -12,6 +12,15 @@ Vertex matToVect(Matrix m){
   return res;
 }
 
+Vecteur3f matToVect3f(Matrix m){
+  Vecteur3f res;
+  float z = m[3][0];
+  res.x = m[0][0]/z;
+  res.y = m[1][0]/z;
+  res.z = m[2][0]/z;
+  return res;
+}
+
 Vecteur3f normalize(Vecteur3f vecteur){
     double n = sqrt(vecteur.x * vecteur.x + vecteur.y * vecteur.y + vecteur.z * vecteur.z);
     Vecteur3f v;

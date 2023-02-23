@@ -5,9 +5,8 @@
 
 struct IShader
 {
-    virtual ~IShader();
-    virtual Vecteur4f vertex(int iface, int nthvert) = 0;
-    virtual bool fragment(Vecteur3f bar, TGAColor &color) = 0;
+    virtual void vertex(Vertex &v, int idx) = 0;
+    virtual bool fragment(TGAColor &normal, TGAColor &color, Vecteur3f &bar) = 0;
 };
 
 void triangleRasterizer(Vecteur4f *points, IShader &shader, TGAImage &image, float *zbuffer);

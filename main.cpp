@@ -41,6 +41,51 @@ int depth = 255;
 Modele *modele = NULL;
 //################################
 
+struct GouraudShader : public IShader
+{
+    Vecteur3f varying_intensity;
+
+    void vertex(Vertex &v, int idx) override
+    {
+        Vecteur3f temp = {v.x, v.y, v.z};
+        Matrix gl_Vertex = Matrix(&v);
+
+        Vecteur3f prod = crossProduct(temp, light_direction);
+        varying_intensity[idx] = std::max(0., sqrt(temp.x * temp.x + temp.y * temp.y + temp.z * temp.z));
+
+        Matrix resultat = ViewPort * Projection * ModelView * gl_Vertex;
+        v = matToVect(resultat);
+    }
+
+    bool fragment(TGAColor &normal, TGAColor &color, Vecteur3f &bar) override
+    {
+        Vecteur3f norm,rgb,light;
+
+        norm.x = normal.r * 2. / 255. -1.;
+        norm.y = normal.g * 2. / 255. -1.;
+        norm.z = normal.b * 2. / 255. -1.;
+
+        norm = normalize(norm);
+        light = normalize(light_direction);
+
+        float intensity = sqrt(light_direction.x*light_direction.x + light_direction.y*light_direction.y + light_direction.z*light_direction.z);
+
+        rgb.x = color.r;
+        rgb.y = color.g;
+        rgb.z = color.b;
+
+        double diffuse = std::min(1., std::max(0., rgb*norm) / 255.);
+        
+        color.r *= diffuse;
+        color.g *= diffuse;
+        color.b *= diffuse;
+
+        return false;
+    }
+};
+
+
+
 /**
  * @brief Permet de colorier des pixel sur une ligne définie par 2 points x et y.
  * 
@@ -83,7 +128,6 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
     }
 }
 
-
 /**
  * @brief Permet de dessiner un triangle avec la couleur qui corresponds a la texture
  * 
@@ -94,12 +138,13 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color)
  * @param texture L'image contenant la texture
  * @param intensity L'intensité du triangle
  */
-void triangle(std::vector<Vertex> points, std::vector<Vertex> pointsTextures, float *zbuffer, TGAImage &image, TGAImage &texture, double intensity)
+void triangle(std::vector<Vertex> points, std::vector<Vertex> pointsTextures, float *zbuffer, TGAImage &image, TGAImage &texture, TGAImage &normal, GouraudShader shader,double intensity)
 {
     Vertex p;
     Vertex barycentrique;
     //Nouvelle couleur
     TGAColor colorTexture;
+    TGAColor colorNormal;
 
     int bboxminx = image.get_width() - 1;
     int bboxminy = image.get_height() - 1;
@@ -134,6 +179,12 @@ void triangle(std::vector<Vertex> points, std::vector<Vertex> pointsTextures, fl
                 //On récupère la couleur du pixel
                 colorTexture = texture.get(textureX, textureY);
 
+                int normX, normY;
+                normX = barycentrique.x * textureX + barycentrique.y * textureX + barycentrique.z * textureX;
+                normY = barycentrique.x * textureY + barycentrique.y * textureY + barycentrique.z * textureY;
+
+                colorNormal = normal.get(normX, normY);
+
                 p.z = 0;
                 p.z += points[0].z * barycentrique.x;
                 p.z += points[1].z * barycentrique.y;
@@ -141,7 +192,10 @@ void triangle(std::vector<Vertex> points, std::vector<Vertex> pointsTextures, fl
                 if (zbuffer[int(p.x + p.y * width)] < p.z)
                 {
                     zbuffer[int(p.x + p.y * width)] = p.z;
-                    image.set(p.x, p.y, TGAColor(colorTexture.r * intensity, colorTexture.g * intensity, colorTexture.b * intensity, 255));
+                    Vecteur3f bar = {barycentrique.x, barycentrique.y, barycentrique.z};
+                    bool discard = shader.fragment(colorNormal,colorTexture,bar);
+                    //if(!discard)
+                        image.set(p.x, p.y, TGAColor(colorTexture.r * intensity, colorTexture.g * intensity, colorTexture.b * intensity, 255));
                 }
             }
         }
@@ -187,9 +241,11 @@ void wireframe(Modele *modele, TGAImage &image, TGAColor color)
     }
 }
 
-void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
-{
 
+
+
+void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture, TGAImage &normal, GouraudShader shader)
+{
     //################################
     //Definition des matrice ModelView, ViewPort et Projection
     ModelView = lookat(eye, center, up);
@@ -214,7 +270,7 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
         //On récupère les information de la face actuelle
         std::vector<int> face = faces[i];
         std::vector<int> faceCoord = faces2[i];
-        
+
         //################################
         //On va créer 2x3 vertex à partir des faces (Un vertex de coordonnée, et un pour les textures)            
         Vertex v0 = vertex[face[0] - 1];
@@ -225,6 +281,10 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
 
         Vertex v2 = vertex[face[2] - 1];
         Vertex vt2 = vertexT[faceCoord[2] - 1];
+        
+        shader.vertex(v0, 0);
+        shader.vertex(v1, 1);
+        shader.vertex(v2, 2);
 
         //On crée 2 vecteurs
         Vecteur3f v01 = {v1.x - v0.x, v1.y - v0.y, v1.z - v0.z};
@@ -248,25 +308,27 @@ void render(Modele *modele, float *zbuffer, TGAImage &image, TGAImage &texture)
 
         //Meme chose mais avec les coordonnées + mise a l'échelle sur l'écran
         std::vector<Vertex> screen_coords;
-        screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v0)));
-        screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v1)));
-        screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v2)));
+        //screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v0)));
+        //screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v1)));
+        //screen_coords.push_back(matToVect(ViewPort * Projection * ModelView * Matrix(&v2)));
+        screen_coords.push_back(v0);
+        screen_coords.push_back(v1);
+        screen_coords.push_back(v2);
 
         //Si intensity > 0 = triangle éclairé = on l'affiche
         if (intensity > 0)
-            triangle(screen_coords, pointsTexture, zbuffer, image, texture, intensity);
+            triangle(screen_coords, pointsTexture, zbuffer, image, texture, normal, shader, intensity);
     }
     //################################
 
 }
-
-
 
 int main(int argc, char **argv)
 {
     int fin;
     std::string fileName;
     std::string fileTextureName;
+    std::string fileNormalName;
     // On vérifie le nombre d'argument: si un argument est précisé, on s'en sert.
     // Sinon par défaut on ouvre le fichier "obj/african_head.obj"
     if (2 == argc)
@@ -274,6 +336,7 @@ int main(int argc, char **argv)
         fileName = argv[1];
         fin = fileName.find(".");
         fileTextureName = fileName.substr(0, fin) + "_diffuse.tga";
+        fileNormalName = fileName.substr(0, fin) + "_nm.tga";
         modele = new Modele(argv[1]);
     }
     else
@@ -281,23 +344,29 @@ int main(int argc, char **argv)
         std::cout << "Aucun fichier spécifié en argument. Utilisation du fichier par défaut (african_head).";
         fileName = "obj/african_head.obj";
         fileTextureName = "obj/african_head_diffuse.tga";
+        fileNormalName = "obj/african_head_nm.tga";
         modele = new Modele("obj/african_head.obj");
     }
+    GouraudShader shader;
 
     // Création de l'image.
     TGAImage image(width, height, TGAImage::RGB);
     TGAImage texture = TGAImage();
     texture.read_tga_file(fileTextureName.c_str());
     texture.flip_vertically();
+
+    TGAImage normal = TGAImage();
+    normal.read_tga_file(fileNormalName.c_str());
+    normal.flip_vertically();
+
     modele = new Modele(fileName);
     // Z buffer
     float *zbuffer = new float[width * height];
     // Init a -l'infinie.
     for (int i = width * height; i--; zbuffer[i] = -std::numeric_limits<float>::max());
     
-    
     //wireframe(modele, image, white);
-    render(modele, zbuffer, image, texture);
+    render(modele, zbuffer, image, texture, normal, shader);
     image.flip_vertically(); // i want to have the origin at the left bottom corner of the image
     image.write_tga_file("output.tga");
 

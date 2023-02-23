@@ -3,8 +3,7 @@
 #include <cstdlib>
 #include "our_gl.h"
 
-IShader::~IShader(){}
-
+/*
 void triangleRasterizer(Vecteur4f *points, IShader &shader, TGAImage &image, float *zbuffer){
     //#On créer les boites pour vérifier le minimum et le maximum
     Vecteur2f bboxmin{std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
@@ -41,3 +40,4 @@ void triangleRasterizer(Vecteur4f *points, IShader &shader, TGAImage &image, flo
         }
     }
 }
+    */
