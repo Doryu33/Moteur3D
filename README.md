@@ -1,5 +1,6 @@
 # Moteur3D
 Cours M1 Rendu de moteur 3D.
+Basé sur: https://github.com/ssloy/tinyrenderer
 
 # Compilation & Execution
 - Utiliser le makefile avec la commande "make"
